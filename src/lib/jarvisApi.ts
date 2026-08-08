@@ -48,7 +48,7 @@ export type JarvisReply = { output: string; tts: string };
 export const GENERIC_ERROR =
   "Je ne parviens pas à joindre JARVIS pour le moment. Vérifiez votre connexion puis réessayez.";
 
-function extract(raw: unknown): { output?: string; tts?: string } {
+function extract(raw: unknown): { output?: string | undefined; tts?: string | undefined } {
   if (!raw) return {};
   if (Array.isArray(raw)) return extract(raw[0]);
   if (typeof raw === "string") {
