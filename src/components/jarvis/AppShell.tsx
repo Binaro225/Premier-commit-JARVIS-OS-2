@@ -1,19 +1,24 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Settings2 } from "lucide-react";
+import { Settings2, Terminal } from "lucide-react";
+import { Telemetry } from "./Telemetry";
 
 function Clock() {
   const [time, setTime] = useState("");
   useEffect(() => {
     const tick = () =>
       setTime(
-        new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+        new Date().toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
       );
     tick();
-    const id = setInterval(tick, 20000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="font-display text-sm tabular-nums text-foreground/90" aria-label="Heure locale">
+    <span className="font-mono text-[0.68rem] tabular-nums text-foreground/80" aria-label="Heure locale">
       {time}
     </span>
   );
@@ -21,48 +26,56 @@ function Clock() {
 
 export function AppShell({
   children,
+  aside,
   onOpenSettings,
-  systemLabel,
+  online,
+  busy,
 }: {
   children: ReactNode;
+  aside: ReactNode;
   onOpenSettings: () => void;
-  systemLabel: string;
+  online: boolean;
+  busy: boolean;
 }) {
   return (
-    <main className="hud-grid relative flex h-[100dvh] flex-col overflow-hidden">
+    <main className="hud-grid scanlines relative flex h-[100dvh] flex-col overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(60%_100%_at_50%_0%,oklch(0.83_0.15_199/10%),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(60%_100%_at_50%_0%,oklch(0.874_0.147_199.6/10%),transparent)]"
         aria-hidden
       />
 
-      <header className="relative flex items-start justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <div>
-          <h1 className="font-display text-glow text-lg leading-none font-semibold tracking-[0.18em] text-primary">
-            JARVIS OS
+      <header className="relative flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-3 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2.5">
+        <div className="flex items-center gap-2">
+          <Terminal className="size-4 text-primary" aria-hidden />
+          <h1 className="font-display text-glow text-[0.82rem] leading-none font-bold tracking-[0.14em] text-primary">
+            JARVIS-OS
+            <span className="ml-1 animate-hud-blink text-primary/70">// CORE v4.09</span>
           </h1>
-          <p className="mt-1.5 flex items-center gap-2 text-[0.62rem] tracking-[0.24em] text-muted-foreground uppercase">
-            <span className="relative flex size-1.5" aria-hidden>
-              <span className="absolute inset-0 animate-ping rounded-full bg-success/70" />
-              <span className="relative size-1.5 rounded-full bg-success" />
-            </span>
-            {systemLabel}
-          </p>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
           <Clock />
           <button
             type="button"
             onClick={onOpenSettings}
             aria-label="Ouvrir les paramètres"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="clip-hud-sm inline-flex size-9 items-center justify-center border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
           >
-            <Settings2 className="size-[18px]" aria-hidden />
+            <Settings2 className="size-4" aria-hidden />
           </button>
+        </div>
+
+        <div className="w-full">
+          <Telemetry online={online} busy={busy} />
         </div>
       </header>
 
-      {children}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2 lg:grid lg:grid-cols-[1fr_20rem] lg:gap-3 lg:p-3">
+        <div className="glass-panel clip-hud order-2 flex min-h-0 flex-1 flex-col overflow-hidden lg:order-1">
+          {children}
+        </div>
+        <div className="order-1 min-h-0 shrink-0 lg:order-2 lg:overflow-hidden">{aside}</div>
+      </div>
     </main>
   );
 }

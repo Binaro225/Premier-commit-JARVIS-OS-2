@@ -8,6 +8,7 @@ export type Message = {
   at: number;
   error?: boolean;
   retryPrompt?: string;
+  pid?: string;
 };
 
 export type Settings = {

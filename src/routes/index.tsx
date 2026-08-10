@@ -7,9 +7,11 @@ import { CoreStatusLabel, JarvisCore, type CoreState } from "@/components/jarvis
 import { OfflineBanner } from "@/components/jarvis/OfflineBanner";
 import { SettingsModal } from "@/components/jarvis/SettingsModal";
 import { Suggestions } from "@/components/jarvis/Suggestions";
+import { TaskPanel } from "@/components/jarvis/TaskPanel";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useOnlineStatus } from "@/hooks/usePwa";
 import { askJarvis, cleanText, GENERIC_ERROR } from "@/lib/jarvisApi";
+import { newPid, taskLabel, type Task } from "@/lib/tasks";
 import { speak, stopSpeech } from "@/lib/tts";
 import {
   clearHistory,
@@ -51,8 +53,10 @@ function JarvisScreen() {
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [freshIds, setFreshIds] = useState<string[]>([]);
   const online = useOnlineStatus();
-  const busyRef = useRef(false);
+  const speakingRef = useRef(false);
 
   useEffect(() => {
     setMessages(loadHistory());
@@ -70,87 +74,129 @@ function JarvisScreen() {
 
   useEffect(() => () => stopSpeech(), []);
 
+  const activeTasks = tasks.filter((t) => t.status === "IN_PROGRESS").length;
+
+  /* Progression simulée des threads en cours d'exécution. */
+  useEffect(() => {
+    if (activeTasks === 0) return;
+    const id = setInterval(() => {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.status === "IN_PROGRESS"
+            ? { ...t, progress: Math.min(93, t.progress + 3 + Math.random() * 9) }
+            : t,
+        ),
+      );
+    }, 700);
+    return () => clearInterval(id);
+  }, [activeTasks]);
+
+  /* L'état du noyau suit les threads actifs, l'écoute et la parole. */
+  useEffect(() => {
+    setState((s) => {
+      if (s === "listening" || s === "speaking" || s === "error") return s;
+      return activeTasks > 0 ? "processing" : "idle";
+    });
+  }, [activeTasks]);
+
   const stopAudio = useCallback(() => {
     stopSpeech();
+    speakingRef.current = false;
     setSpeakingId(null);
     setState((s) => (s === "speaking" ? "idle" : s));
   }, []);
 
-  const playMessage = useCallback(
-    async (message: Message) => {
-      const text = cleanText(message.tts ?? message.text);
-      if (!text) return;
-      stopSpeech();
-      setSpeakingId(message.id);
-      setState("speaking");
-      await speak(text, {
-        onEnd: () => {
-          setSpeakingId(null);
-          setState((s) => (s === "speaking" ? "idle" : s));
-        },
-      });
-    },
-    [],
-  );
+  const playMessage = useCallback(async (message: Message) => {
+    const text = cleanText(message.tts ?? message.text);
+    if (!text) return;
+    stopSpeech();
+    speakingRef.current = true;
+    setSpeakingId(message.id);
+    setState("speaking");
+    await speak(text, {
+      onEnd: () => {
+        speakingRef.current = false;
+        setSpeakingId(null);
+        setState("idle");
+      },
+    });
+  }, []);
 
+  const flagError = useCallback((text: string, retryPrompt?: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: newId(),
+        role: "jarvis",
+        text,
+        at: Date.now(),
+        error: true,
+        ...(retryPrompt ? { retryPrompt } : {}),
+      },
+    ]);
+    setState("error");
+    setTimeout(() => setState((s) => (s === "error" ? "idle" : s)), 3200);
+  }, []);
+
+  /**
+   * Envoi non bloquant : chaque demande devient un thread indépendant (PID).
+   * On peut continuer à dialoguer pendant qu'un thread travaille ; la réponse
+   * arrive dans le flux dès qu'elle est prête.
+   */
   const send = useCallback(
-    async (raw: string) => {
+    (raw: string) => {
       const text = raw.trim();
-      if (!text || busyRef.current) return;
-      busyRef.current = true;
-      stopAudio();
+      if (!text) return;
       setInput("");
 
-      const userMsg: Message = { id: newId(), role: "user", text, at: Date.now() };
-      setMessages((prev) => [...prev, userMsg]);
-      setState("processing");
+      const task: Task = {
+        id: newId(),
+        pid: newPid(),
+        label: taskLabel(text),
+        status: "IN_PROGRESS",
+        progress: 6,
+        at: Date.now(),
+      };
+      setTasks((prev) => [task, ...prev].slice(0, 12));
+      setMessages((prev) => [
+        ...prev,
+        { id: newId(), role: "user", text, at: Date.now(), pid: task.pid },
+      ]);
 
-      try {
-        const reply = await askJarvis(text);
-        const jarvisMsg: Message = {
-          id: newId(),
-          role: "jarvis",
-          text: reply.output,
-          tts: reply.tts,
-          at: Date.now(),
-        };
-        setMessages((prev) => [...prev, jarvisMsg]);
-        setState("idle");
-        if (settings.voiceEnabled) void playMessage(jarvisMsg);
-      } catch {
-        setMessages((prev) => [
-          ...prev,
-          {
+      void (async () => {
+        try {
+          const reply = await askJarvis(text);
+          const jarvisMsg: Message = {
             id: newId(),
             role: "jarvis",
-            text: GENERIC_ERROR,
+            text: reply.output,
+            tts: reply.tts,
             at: Date.now(),
-            error: true,
-            retryPrompt: text,
-          },
-        ]);
-        setState("error");
-        setTimeout(() => setState((s) => (s === "error" ? "idle" : s)), 3200);
-      } finally {
-        busyRef.current = false;
-      }
+            pid: task.pid,
+          };
+          setTasks((prev) =>
+            prev.map((t) => (t.id === task.id ? { ...t, status: "COMPLETE", progress: 100 } : t)),
+          );
+          setMessages((prev) => [...prev, jarvisMsg]);
+          setFreshIds((prev) => [...prev, jarvisMsg.id]);
+          if (settings.voiceEnabled && !speakingRef.current) void playMessage(jarvisMsg);
+        } catch {
+          setTasks((prev) =>
+            prev.map((t) => (t.id === task.id ? { ...t, status: "FAILED", progress: 100 } : t)),
+          );
+          flagError(GENERIC_ERROR, text);
+        }
+      })();
     },
-    [playMessage, settings.voiceEnabled, stopAudio],
+    [flagError, playMessage, settings.voiceEnabled],
   );
 
   const speech = useSpeechRecognition({
     onFinal: (text) => {
-      if (settings.autoSendVoice) void send(text);
+      if (settings.autoSendVoice) send(text);
       else setInput(text);
     },
-    onError: (message) => {
-      setMessages((prev) => [
-        ...prev,
-        { id: newId(), role: "jarvis", text: message, at: Date.now(), error: true },
-      ]);
-      setState("error");
-      setTimeout(() => setState((s) => (s === "error" ? "idle" : s)), 3200);
-    },
+    onError: (message) => flagError(message),
   });
 
   useEffect(() => {
@@ -164,10 +210,12 @@ function JarvisScreen() {
     <>
       <AppShell
         onOpenSettings={() => setSettingsOpen(true)}
-        systemLabel={online ? "Système en ligne" : "Mode hors ligne"}
+        online={online}
+        busy={activeTasks > 0}
+        aside={<TaskPanel tasks={tasks} />}
       >
-        <div className="flex shrink-0 flex-col items-center gap-2 pb-2">
-          <JarvisCore state={state} size={168} />
+        <div className="flex shrink-0 flex-col items-center gap-2 pt-2 pb-2">
+          <JarvisCore state={state} size={150} />
           <CoreStatusLabel state={state} />
         </div>
 
@@ -176,26 +224,26 @@ function JarvisScreen() {
         <ChatHistory
           messages={messages}
           speakingId={speakingId}
-          processing={state === "processing"}
+          freshIds={freshIds}
+          processing={activeTasks > 0}
+          processingCount={activeTasks}
           onReplay={(m) => (speakingId === m.id ? stopAudio() : void playMessage(m))}
           onStop={stopAudio}
-          onRetry={(prompt) => void send(prompt)}
+          onRetry={(prompt) => send(prompt)}
         />
 
         {speech.interim && (
-          <p className="px-4 pb-1 text-xs text-primary/80 italic" aria-live="polite">
-            {speech.interim}
+          <p className="px-3 pb-1 font-mono text-[0.7rem] text-primary/80" aria-live="polite">
+            &gt; {speech.interim}
           </p>
         )}
 
-        {userTurns < 3 && (
-          <Suggestions onPick={(t) => void send(t)} disabled={state === "processing"} />
-        )}
+        {userTurns < 3 && <Suggestions onPick={(t) => send(t)} />}
 
         <CommandBar
           value={input}
           onChange={setInput}
-          onSend={() => void send(input)}
+          onSend={() => send(input)}
           state={state}
           listening={speech.listening}
           micSupported={speech.supported}
@@ -227,9 +275,11 @@ function JarvisScreen() {
         onClearHistory={() => {
           clearHistory();
           stopAudio();
+          setTasks([]);
           setMessages([welcomeMessage()]);
         }}
       />
     </>
   );
 }
+
