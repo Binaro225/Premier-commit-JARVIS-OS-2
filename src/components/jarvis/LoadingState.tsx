@@ -1,24 +1,24 @@
 import { motion, useReducedMotion } from "framer-motion";
 
-export function LoadingState() {
+export function LoadingState({ count = 1 }: { count?: number }) {
   const reduce = useReducedMotion();
   return (
-    <div className="flex justify-start" aria-label="JARVIS analyse votre demande">
-      <div className="glass-panel flex items-center gap-2 rounded-2xl rounded-bl-sm px-4 py-3">
-        <span className="font-display text-[0.62rem] tracking-[0.28em] text-primary/80 uppercase">
-          Jarvis
-        </span>
-        <span className="flex items-center gap-1" aria-hidden>
-          {[0, 1, 2].map((i) => (
+    <div className="flex" aria-label="JARVIS traite votre demande">
+      <div className="clip-hud-sm flex items-center gap-2 border border-primary/25 bg-primary/5 px-3 py-2">
+        <span className="hud-label text-primary/80">jarvis_core</span>
+        <span className="flex items-end gap-[3px]" aria-hidden>
+          {[0, 1, 2, 3].map((i) => (
             <motion.span
               key={i}
-              className="size-1.5 rounded-full bg-primary"
-              animate={reduce ? {} : { opacity: [0.25, 1, 0.25] }}
-              transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18 }}
+              className="w-[3px] bg-primary"
+              animate={reduce ? { height: 6 } : { height: [4, 14, 6] }}
+              transition={{ duration: 0.8, repeat: Infinity, repeatType: "mirror", delay: i * 0.12 }}
             />
           ))}
         </span>
-        <span className="text-xs text-muted-foreground">analyse…</span>
+        <span className="font-mono text-[0.68rem] text-muted-foreground">
+          traitement… {count > 1 ? `${count} threads` : "1 thread"}
+        </span>
       </div>
     </div>
   );
