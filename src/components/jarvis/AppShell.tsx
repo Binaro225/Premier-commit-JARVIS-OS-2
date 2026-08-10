@@ -71,10 +71,10 @@ export function AppShell({
       </header>
 
       <div className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2 lg:grid lg:grid-cols-[1fr_20rem] lg:gap-3 lg:p-3">
-        <div className="glass-panel clip-hud flex min-h-0 flex-1 flex-col overflow-hidden lg:order-1">
+        <div className="glass-panel clip-hud order-2 flex min-h-0 flex-1 flex-col overflow-hidden lg:order-1">
           {children}
         </div>
-        <div className="min-h-0 shrink-0 lg:order-2 lg:overflow-hidden">{aside}</div>
+        <div className="order-1 min-h-0 shrink-0 lg:order-2 lg:overflow-hidden">{aside}</div>
       </div>
     </main>
   );

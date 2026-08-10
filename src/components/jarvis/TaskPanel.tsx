@@ -78,7 +78,7 @@ export function TaskPanel({ tasks }: { tasks: Task[] }) {
           Aucun processus. Lancez plusieurs demandes : JARVIS les traite en parallèle.
         </p>
       ) : (
-        <ul className="scroll-slim flex max-h-[42vh] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-none lg:flex-1">
+        <ul className="scroll-slim flex max-h-[22vh] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-none lg:flex-1">
           {tasks.map((t) => (
             <TaskCard key={t.id} task={t} />
           ))}
