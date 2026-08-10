@@ -62,62 +62,65 @@
 }
 
 :root {
-  --radius: 0.9rem;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius: 0.35rem;
+  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-head: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-mono-hud: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Fond noir profond / bleu nuit / graphite */
-  --background: oklch(0.14 0.024 259);
-  --foreground: oklch(0.94 0.012 220);
-  --card: oklch(0.19 0.028 258 / 65%);
-  --card-foreground: oklch(0.94 0.012 220);
-  --popover: oklch(0.17 0.026 258);
-  --popover-foreground: oklch(0.94 0.012 220);
+  /* Noir absolu bleuté */
+  --background: oklch(0.121 0.019 265);
+  --foreground: oklch(0.93 0.014 220);
+  --card: oklch(0.17 0.024 262 / 55%);
+  --card-foreground: oklch(0.93 0.014 220);
+  --popover: oklch(0.15 0.022 262);
+  --popover-foreground: oklch(0.93 0.014 220);
 
-  /* Cyan électrique */
-  --primary: oklch(0.83 0.15 199);
-  --primary-foreground: oklch(0.16 0.03 250);
-  --secondary: oklch(0.26 0.032 256);
-  --secondary-foreground: oklch(0.93 0.012 220);
-  --muted: oklch(0.24 0.028 256);
-  --muted-foreground: oklch(0.72 0.03 226);
-  --accent: oklch(0.28 0.04 255);
-  --accent-foreground: oklch(0.93 0.012 220);
+  /* Neon cyan #00f3ff */
+  --primary: oklch(0.874 0.147 199.6);
+  --primary-foreground: oklch(0.14 0.03 250);
+  --secondary: oklch(0.235 0.03 258);
+  --secondary-foreground: oklch(0.93 0.014 220);
+  --muted: oklch(0.21 0.026 258);
+  --muted-foreground: oklch(0.7 0.032 226);
+  --accent: oklch(0.55 0.19 258); /* bleu électrique #0d6efd */
+  --accent-foreground: oklch(0.96 0.01 220);
 
   --energy: oklch(0.78 0.16 62);
   --violet: oklch(0.68 0.17 296);
-  --destructive: oklch(0.63 0.22 22);
+  --destructive: oklch(0.637 0.208 25.3); /* #ef4444 */
   --destructive-foreground: oklch(0.97 0.01 220);
-  --success: oklch(0.8 0.16 155);
+  --success: oklch(0.696 0.149 162.5); /* matrice #10b981 */
 
-  --border: oklch(0.83 0.15 199 / 16%);
-  --input: oklch(0.83 0.15 199 / 22%);
-  --ring: oklch(0.83 0.15 199 / 70%);
+  --border: oklch(0.874 0.147 199.6 / 18%);
+  --input: oklch(0.874 0.147 199.6 / 26%);
+  --ring: oklch(0.874 0.147 199.6 / 70%);
 
-  --chart-1: oklch(0.83 0.15 199);
-  --chart-2: oklch(0.68 0.17 296);
+  --chart-1: oklch(0.874 0.147 199.6);
+  --chart-2: oklch(0.55 0.19 258);
   --chart-3: oklch(0.78 0.16 62);
-  --chart-4: oklch(0.63 0.22 22);
-  --chart-5: oklch(0.8 0.16 155);
-  --sidebar: oklch(0.16 0.026 258);
-  --sidebar-foreground: oklch(0.94 0.012 220);
-  --sidebar-primary: oklch(0.83 0.15 199);
-  --sidebar-primary-foreground: oklch(0.16 0.03 250);
-  --sidebar-accent: oklch(0.26 0.032 256);
-  --sidebar-accent-foreground: oklch(0.93 0.012 220);
-  --sidebar-border: oklch(0.83 0.15 199 / 16%);
-  --sidebar-ring: oklch(0.83 0.15 199 / 60%);
+  --chart-4: oklch(0.637 0.208 25.3);
+  --chart-5: oklch(0.696 0.149 162.5);
+  --sidebar: oklch(0.14 0.022 262);
+  --sidebar-foreground: oklch(0.93 0.014 220);
+  --sidebar-primary: oklch(0.874 0.147 199.6);
+  --sidebar-primary-foreground: oklch(0.14 0.03 250);
+  --sidebar-accent: oklch(0.235 0.03 258);
+  --sidebar-accent-foreground: oklch(0.93 0.014 220);
+  --sidebar-border: oklch(0.874 0.147 199.6 / 18%);
+  --sidebar-ring: oklch(0.874 0.147 199.6 / 60%);
 
-  --glow-cyan: 0 0 24px oklch(0.83 0.15 199 / 35%);
-  --glow-strong: 0 0 46px oklch(0.83 0.15 199 / 55%);
+  --glow-cyan: 0 0 22px oklch(0.874 0.147 199.6 / 30%);
+  --glow-strong: 0 0 44px oklch(0.874 0.147 199.6 / 50%);
   --gradient-shell: radial-gradient(
-      120% 80% at 50% -10%,
-      oklch(0.28 0.06 235 / 55%) 0%,
-      transparent 60%
+      110% 70% at 50% -10%,
+      oklch(0.3 0.09 235 / 40%) 0%,
+      transparent 62%
     ),
-    radial-gradient(90% 60% at 50% 110%, oklch(0.24 0.05 268 / 45%) 0%, transparent 65%);
-  --grid-line: oklch(0.83 0.15 199 / 6%);
+    radial-gradient(80% 55% at 50% 110%, oklch(0.22 0.06 268 / 40%) 0%, transparent 68%);
+  --grid-line: oklch(0.874 0.147 199.6 / 5%);
 }
+
 
 .dark {
   color-scheme: dark;
