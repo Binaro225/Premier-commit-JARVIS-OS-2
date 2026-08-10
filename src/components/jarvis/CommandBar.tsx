@@ -1,14 +1,14 @@
-import { Send } from "lucide-react";
+import { ChevronRight, Send } from "lucide-react";
 import { VoiceInputButton } from "./VoiceInputButton";
 import { AudioControls } from "./AudioControls";
 import type { CoreState } from "./JarvisCore";
 
 const HINT: Record<CoreState, string> = {
-  idle: "Appuyez pour parler",
-  listening: "Écoute en cours",
-  processing: "JARVIS analyse",
-  speaking: "JARVIS parle",
-  error: "Appuyez pour parler",
+  idle: "await_input",
+  listening: "voice_capture",
+  processing: "processing_threads",
+  speaking: "audio_output",
+  error: "await_input",
 };
 
 type Props = {
@@ -43,13 +43,10 @@ export function CommandBar({
   const speaking = state === "speaking";
 
   return (
-    <div className="glass-panel rounded-t-3xl border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="glass-panel border-t px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mb-2 flex items-center justify-between">
-        <span
-          className="font-display text-[0.62rem] tracking-[0.26em] text-muted-foreground uppercase"
-          aria-live="polite"
-        >
-          {HINT[state]}
+        <span className="hud-label text-muted-foreground" aria-live="polite">
+          [{HINT[state]}]
         </span>
         <AudioControls
           voiceEnabled={voiceEnabled}
@@ -74,8 +71,9 @@ export function CommandBar({
           onHoldEnd={onHoldEnd}
         />
 
-        <label className="flex-1">
-          <span className="sr-only">Votre demande pour JARVIS</span>
+        <label className="clip-hud flex flex-1 items-start gap-1.5 border border-input bg-background/60 px-2.5 py-2 focus-within:border-primary/70">
+          <span className="sr-only">Commande pour JARVIS</span>
+          <ChevronRight className="mt-1.5 size-4 shrink-0 animate-hud-blink text-primary" aria-hidden />
           <textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -86,18 +84,19 @@ export function CommandBar({
               }
             }}
             rows={1}
-            placeholder="Parlez ou écrivez votre demande…"
-            className="scroll-slim max-h-28 min-h-11 w-full resize-none rounded-2xl border border-input bg-background/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none"
+            placeholder="saisir_commande…"
+            className="scroll-slim max-h-28 min-h-8 w-full resize-none bg-transparent py-1 font-mono text-[0.8rem] text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
           />
         </label>
 
         <button
           type="submit"
-          disabled={!value.trim() || state === "processing"}
-          aria-label="Envoyer la demande"
-          className="flex size-12 min-h-11 min-w-11 items-center justify-center rounded-2xl border border-primary/40 bg-primary/15 text-primary transition-colors hover:bg-primary/25 disabled:opacity-40"
+          disabled={!value.trim()}
+          aria-label="Exécuter la commande"
+          className="clip-hud-sm flex min-h-11 items-center gap-1.5 border border-primary/45 bg-primary/15 px-3 font-mono text-[0.62rem] tracking-[0.14em] text-primary uppercase transition-colors hover:bg-primary/25 disabled:opacity-40 sm:px-4"
         >
-          <Send className="size-5" aria-hidden />
+          <Send className="size-4" aria-hidden />
+          <span className="hidden sm:inline">[execute]</span>
         </button>
       </form>
     </div>
