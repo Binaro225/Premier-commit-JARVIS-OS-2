@@ -7,9 +7,11 @@ import { CoreStatusLabel, JarvisCore, type CoreState } from "@/components/jarvis
 import { OfflineBanner } from "@/components/jarvis/OfflineBanner";
 import { SettingsModal } from "@/components/jarvis/SettingsModal";
 import { Suggestions } from "@/components/jarvis/Suggestions";
+import { TaskPanel } from "@/components/jarvis/TaskPanel";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useOnlineStatus } from "@/hooks/usePwa";
 import { askJarvis, cleanText, GENERIC_ERROR } from "@/lib/jarvisApi";
+import { newPid, taskLabel, type Task } from "@/lib/tasks";
 import { speak, stopSpeech } from "@/lib/tts";
 import {
   clearHistory,
